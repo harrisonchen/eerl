@@ -169,6 +169,7 @@ void Grid::setupGrid(int n, int m) {
     srand(time(NULL));
     int startFirst = rand() % n;
     int startSecond = rand() % n;
+    startLocation = pair<int, int>(startFirst, startSecond);
     grid[startFirst][startSecond].start = true;
 
     // Generate obstacles
@@ -219,21 +220,41 @@ void Grid::setupGrid(int n, int m) {
     }
 }
 
-Direction randomDirection(int i) {
-    switch(i) {
+Direction randomDirection(int r, GridCell *gridCell) {
+    switch(r) {
         case 0:
+            gridCell->north = 0.7;
+            gridCell->east = 0.1;
+            gridCell->south = 0.1;
+            gridCell->west = 0.1;
             return NORTH;
             break;
         case 1:
+            gridCell->north = 0.1;
+            gridCell->east = 0.7;
+            gridCell->south = 0.1;
+            gridCell->west = 0.1;
             return EAST;
             break;
         case 2:
+            gridCell->north = 0.1;
+            gridCell->east = 0.1;
+            gridCell->south = 0.7;
+            gridCell->west = 0.1;
             return SOUTH;
             break;
         case 3:
+            gridCell->north = 0.1;
+            gridCell->east = 0.1;
+            gridCell->south = 0.1;
+            gridCell->west = 0.7;
             return WEST;
             break;
         default:
+            gridCell->north = 0.7;
+            gridCell->east = 0.1;
+            gridCell->south = 0.1;
+            gridCell->west = 0.1;
             return NORTH;
             break;
     }
@@ -241,14 +262,23 @@ Direction randomDirection(int i) {
 
 void Grid::initPolicy(int n) {
     srand(time(NULL));
+    int r;
 
     for(int i = 0; i < n; ++i) {
         for(int j = 0; j < n; ++j) {
             if(grid[i][j].type == GridCell::BLANK) {
-                grid[i][j].policy = pair<Direction, double>(randomDirection(rand() % 4), 0.0);
+                r = rand() % 4;
+                grid[i][j].policy = pair<Direction, double>(randomDirection(r, &grid[i][j]), 0.0);
             }
         }
     }
+}
+
+double updateUtility(GridCell gridCell, GridCell nextGridCell, double discount) {
+    return gridCell.policy.second +
+           (1/(gridCell.visitCount + 1)) *
+           (gridCell.reward + discount * nextGridCell.policy.second) -
+           gridCell.policy.second;
 }
     
 // Accessors to the 2D grid

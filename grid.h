@@ -65,6 +65,10 @@ struct GridCell
     
     // Current policy where the first is the direction and the second is the value.
     std::pair<Direction, double> policy;
+
+    double north, east, south, west;
+
+    int visitCount;
     
     // Constructors
     GridCell();
