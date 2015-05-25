@@ -226,7 +226,7 @@ void Grid::setupGrid(int n, int m) {
     agentLocation = pair<int, int>(startFirst, startSecond);
     grid[startFirst][startSecond].start = true;
     
-    // Grid::setupObstacles(n, m);
+    Grid::setupObstacles(n, m);
     Grid::setupRewards(n, m);
     Grid::setupPenalties(n, m);
 }
@@ -281,10 +281,12 @@ void Grid::initPolicy(int i, int j) {
     grid[i][j].policy = pair<Direction, double>(randomDirection(r), 0.0);
 }
 
-void Grid::updatePolicy(int i, int j) {
+// Returns maxargs? of utilities
+double Grid::updatePolicy(int i, int j) {
     double maxUtility = 0.0;
     double totalUtility = 0.0;
     double utility = 0.0;
+    bool allZeros = true;
     pair<int, int> al = agentLocation;
 
     GridCell* gc = &grid[al.first][al.second];
@@ -295,49 +297,65 @@ void Grid::updatePolicy(int i, int j) {
     // Check NORTH
     if(Grid::movable(al.first - 1, al.second) && dir != SOUTH) {
         utility = Grid::getUtility(al.first - 1, al.second);
-        totalUtility += utility;
-        
+        if(dir == NORTH)
+            totalUtility += utility * 0.8;
+        else
+            totalUtility += utility * 0.1;
+
         if(utility > maxUtility) {
             maxUtility = utility;
             newDir = EAST;
+            allZeros = false;
         }
     }
 
     // Check EAST
     if(Grid::movable(al.first, al.second + 1) && dir != WEST) {
         utility = Grid::getUtility(al.first, al.second + 1);
-        totalUtility += utility;
+        if(dir == EAST)
+            totalUtility += utility * 0.8;
+        else
+            totalUtility += utility * 0.1;
 
         if(utility > maxUtility) {
             maxUtility = utility;
             newDir = EAST;
+            allZeros = false;
         }
     }
 
     // Check SOUTH
     if(Grid::movable(al.first + 1, al.second) && dir != NORTH) {
         utility = Grid::getUtility(al.first + 1, al.second);
-        totalUtility += utility;
+        if(dir == SOUTH)
+            totalUtility += utility * 0.8;
+        else
+            totalUtility += utility * 0.1;
         
         if(utility > maxUtility) {
             maxUtility = utility;
             newDir = SOUTH;
+            allZeros = false;
         }
     }
 
     // Check WEST
     if(Grid::movable(al.first, al.second - 1) && dir != EAST) {
         utility = Grid::getUtility(al.first, al.second - 1);
-        totalUtility += utility;
+        if(dir == WEST)
+            totalUtility += utility * 0.8;
+        else
+            totalUtility += utility * 0.1;
 
         if(utility > maxUtility) {
             maxUtility = utility;
             newDir = WEST;
+            allZeros = false;
         }
     }
 
     // Neighbors are 0
-    if(totalUtility == 0) {
+    if(allZeros) {
         gc->policy.first = Direction((dir + 1) % 4);
     } else {
         gc->policy.first = newDir;
@@ -346,6 +364,8 @@ void Grid::updatePolicy(int i, int j) {
             Grid::initPolicy(al.first, al.second);
         }
     }
+
+    return totalUtility;
 }
 
 double Grid::getUtility(int i, int j) {
@@ -353,11 +373,17 @@ double Grid::getUtility(int i, int j) {
     return gc.reward + gc.policy.second;
 }
 
-double updateUtility(GridCell gridCell, GridCell nextGridCell, double discount) {
-    return gridCell.policy.second +
-           (1/(gridCell.visitCount + 1)) *
-           (gridCell.reward + discount * nextGridCell.policy.second) -
-           gridCell.policy.second;
+double Grid::updateUtility() {
+    // return gridCell.policy.second +
+    //        (1/(gridCell.visitCount + 1)) *
+    //        (gridCell.reward + discount * nextGridCell.policy.second) -
+    //        gridCell.policy.second;
+
+    // GridCell *gridCell = &grid[agentLocation.first][agentLocation.second];
+
+    // return gridCell->policy.second
+
+    return 0.0;
 }
 
 void Grid::moveAgent() {
@@ -366,7 +392,7 @@ void Grid::moveAgent() {
     //     Grid::initPolicy(agentLoc.first, agentLoc.second);
     // }
 
-    Grid::updatePolicy(agentLoc.first, agentLoc.second);
+    grid[agentLoc.first][agentLoc.second].policy.second = Grid::updatePolicy(agentLoc.first, agentLoc.second);
 
     while(true) {
         Direction dir = Grid::moveStochastically();

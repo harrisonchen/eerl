@@ -118,7 +118,8 @@ public:
     void setupPenalties(int n, int m);
     void setupGrid(int n, int m);
     void initPolicy(int i, int j);
-    void updatePolicy(int i, int j);
+    double updatePolicy(int i, int j);
+    double updateUtility();
     
     // Accessors to the 2D grid
     GridCell& operator[](const std::pair<int,int> & pos);
