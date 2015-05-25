@@ -107,6 +107,8 @@ private:
     
     // starting (row,column) for the agent
     std::pair<int,int> startLocation;
+
+    std::pair<int,int> agentLocation;
 public:
     // Constructors
     Grid(int n, int m);
@@ -116,6 +118,7 @@ public:
     void setupPenalties(int n, int m);
     void setupGrid(int n, int m);
     void initPolicy(int i, int j);
+    void updatePolicy(int i, int j);
     
     // Accessors to the 2D grid
     GridCell& operator[](const std::pair<int,int> & pos);
@@ -124,6 +127,14 @@ public:
     int getRows() const;
     int getCols() const;
     std::pair<int,int> getStartLocation() const;
+    std::pair<int,int> getAgentLocation();
+
+    bool inBound(int i, int j);
+    bool isObstacle(int i, int j);
+    bool isTerminal(int i, int j);
+    Direction moveStochastically();
+
+    void moveAgent();
     
     ///////////
     // Function print

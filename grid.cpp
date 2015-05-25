@@ -157,8 +157,8 @@ Grid::Grid(int n, int m)
 {
     bounds = pair<int,int>(n, n);
     grid = vector<vector<GridCell> >(bounds.first, vector<GridCell>(bounds.second));
+    Grid::setupGrid(n, m);
 
-    
     /* Currently ignores the m parameter in terms of rewards and penalty placement.
         Also ignores n obstacle placement and assigns startLocation to invalid
         location on the grid.
@@ -223,11 +223,33 @@ void Grid::setupGrid(int n, int m) {
     int startFirst = rand() % n;
     int startSecond = rand() % n;
     startLocation = pair<int, int>(startFirst, startSecond);
+    agentLocation = pair<int, int>(startFirst, startSecond);
     grid[startFirst][startSecond].start = true;
     
     Grid::setupObstacles(n, m);
     Grid::setupRewards(n, m);
     Grid::setupPenalties(n, m);
+}
+
+bool Grid::inBound(int i, int j) {
+    if(i < 0 || i >= bounds.first || j < 0 || j >= bounds.first)
+        return false;
+
+    return true;
+}
+
+bool Grid::isObstacle(int i, int j) {
+    if(grid[i][j].type == GridCell::OBSTACLE)
+        return true;
+
+    return false;
+}
+
+bool Grid::isTerminal(int i, int j) {
+    if(grid[i][j].type == GridCell::TERMINAL)
+        return true;
+
+    return false;
 }
 
 Direction randomDirection(int r) {
@@ -251,9 +273,14 @@ Direction randomDirection(int r) {
 }
 
 void Grid::initPolicy(int i, int j) {
-    // srand(time(NULL));
     int r = rand() % 4;
     grid[i][j].policy = pair<Direction, double>(randomDirection(r), 0.0);
+}
+
+void Grid::updatePolicy(int i, int j) {
+    // double maxUtility = 0.0;
+    // pair<int, int> al = agentLocation;
+    // if()
 }
 
 double updateUtility(GridCell gridCell, GridCell nextGridCell, double discount) {
@@ -261,6 +288,97 @@ double updateUtility(GridCell gridCell, GridCell nextGridCell, double discount) 
            (1/(gridCell.visitCount + 1)) *
            (gridCell.reward + discount * nextGridCell.policy.second) -
            gridCell.policy.second;
+}
+
+void Grid::moveAgent() {
+    pair<int, int> agentLoc = Grid::getAgentLocation();
+    if(grid[agentLoc.first][agentLoc.second].policy.first == NONE) {
+        Grid::initPolicy(agentLoc.first, agentLoc.second);
+    }
+
+    while(true) {
+        Direction dir = Grid::moveStochastically();
+        pair<int, int> newAgentLoc = agentLoc;
+        
+        switch(dir) {
+            case NORTH:
+                newAgentLoc.first -= 1;
+                break;
+            case EAST:
+                newAgentLoc.second += 1;
+                break;
+            case SOUTH:
+                newAgentLoc.first += 1;
+                break;
+            case WEST:
+                newAgentLoc.second -= 1;
+                break;
+            default:
+                break;
+        }
+
+        if(Grid::inBound(newAgentLoc.first, newAgentLoc.second) &&
+            !Grid::isObstacle(newAgentLoc.first, newAgentLoc.second)) {
+
+            if(Grid::isTerminal(newAgentLoc.first, newAgentLoc.second)) {
+                agentLocation = Grid::getStartLocation();
+            } else {
+                agentLocation = newAgentLoc;
+            }
+
+            break;
+        }
+    }
+}
+
+Direction Grid::moveStochastically() {
+    pair<int, int> agentLoc = Grid::getAgentLocation();
+    Direction intendedDir = grid[agentLoc.first][agentLoc.second].policy.first;
+    Direction resultDir = NONE;
+    int r = rand() % 101;
+    switch(intendedDir) {
+        case NORTH:
+            if(r < 10) {
+                resultDir = WEST;
+            } else if(r < 20) {
+                resultDir = EAST;
+            } else {
+                resultDir = NORTH;
+            }
+            break;
+        case EAST:
+            if(r < 10) {
+                resultDir = NORTH;
+            } else if(r < 20) {
+                resultDir = SOUTH;
+            } else {
+                resultDir = EAST;
+            }
+            break;
+        case SOUTH:
+            if(r < 10) {
+                resultDir = EAST;
+            } else if(r < 20) {
+                resultDir = WEST;
+            } else {
+                resultDir = SOUTH;
+            }
+            break;
+        case WEST:
+            if(r < 10) {
+                resultDir = SOUTH;
+            } else if(r < 20) {
+                resultDir = NORTH;
+            } else {
+                resultDir = WEST;
+            }
+            break;
+        default:
+            resultDir = NONE;
+            break;
+    }
+
+    return resultDir;
 }
     
 // Accessors to the 2D grid
@@ -287,6 +405,9 @@ int Grid::getCols() const
 pair<int,int> Grid::getStartLocation() const
 {
     return startLocation;
+}
+pair<int,int> Grid::getAgentLocation() {
+    return agentLocation;
 }
     
 ///////////
