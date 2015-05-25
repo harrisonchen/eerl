@@ -11,11 +11,11 @@ void clearScreen() {
 }
 
 void shleep() {
-  usleep(250000);
+  usleep(100000);
 }
 
 void explore(Grid *grid) {
-  for(int i = 0; i < 10; i++) {
+  for(int i = 0; i < 1000; i++) {
     clearScreen();
     grid->print(grid->getAgentLocation());
     grid->moveAgent();
@@ -28,7 +28,7 @@ int main() {
 
   srand(time(NULL));
 
-  int n = 6;
+  int n = 3;
   int m = 1;
 
   Grid grid(n, m);

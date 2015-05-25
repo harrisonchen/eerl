@@ -131,8 +131,10 @@ public:
 
     bool inBound(int i, int j);
     bool isObstacle(int i, int j);
+    bool movable(int i, int j);
     bool isTerminal(int i, int j);
     Direction moveStochastically();
+    double getUtility(int i, int j);
 
     void moveAgent();
     

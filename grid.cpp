@@ -226,7 +226,7 @@ void Grid::setupGrid(int n, int m) {
     agentLocation = pair<int, int>(startFirst, startSecond);
     grid[startFirst][startSecond].start = true;
     
-    Grid::setupObstacles(n, m);
+    // Grid::setupObstacles(n, m);
     Grid::setupRewards(n, m);
     Grid::setupPenalties(n, m);
 }
@@ -243,6 +243,10 @@ bool Grid::isObstacle(int i, int j) {
         return true;
 
     return false;
+}
+
+bool Grid::movable(int i, int j) {
+    return Grid::inBound(i, j) && !Grid::isObstacle(i, j);
 }
 
 bool Grid::isTerminal(int i, int j) {
@@ -278,9 +282,75 @@ void Grid::initPolicy(int i, int j) {
 }
 
 void Grid::updatePolicy(int i, int j) {
-    // double maxUtility = 0.0;
-    // pair<int, int> al = agentLocation;
-    // if()
+    double maxUtility = 0.0;
+    double totalUtility = 0.0;
+    double utility = 0.0;
+    pair<int, int> al = agentLocation;
+
+    GridCell* gc = &grid[al.first][al.second];
+
+    Direction dir = gc->policy.first;
+    Direction newDir = dir;
+
+    // Check NORTH
+    if(Grid::movable(al.first - 1, al.second) && dir != SOUTH) {
+        utility = Grid::getUtility(al.first - 1, al.second);
+        totalUtility += utility;
+        
+        if(utility > maxUtility) {
+            maxUtility = utility;
+            newDir = EAST;
+        }
+    }
+
+    // Check EAST
+    if(Grid::movable(al.first, al.second + 1) && dir != WEST) {
+        utility = Grid::getUtility(al.first, al.second + 1);
+        totalUtility += utility;
+
+        if(utility > maxUtility) {
+            maxUtility = utility;
+            newDir = EAST;
+        }
+    }
+
+    // Check SOUTH
+    if(Grid::movable(al.first + 1, al.second) && dir != NORTH) {
+        utility = Grid::getUtility(al.first + 1, al.second);
+        totalUtility += utility;
+        
+        if(utility > maxUtility) {
+            maxUtility = utility;
+            newDir = SOUTH;
+        }
+    }
+
+    // Check WEST
+    if(Grid::movable(al.first, al.second - 1) && dir != EAST) {
+        utility = Grid::getUtility(al.first, al.second - 1);
+        totalUtility += utility;
+
+        if(utility > maxUtility) {
+            maxUtility = utility;
+            newDir = WEST;
+        }
+    }
+
+    // Neighbors are 0
+    if(totalUtility == 0) {
+        gc->policy.first = Direction((dir + 1) % 4);
+    } else {
+        gc->policy.first = newDir;
+
+        if(grid[al.first][al.second].policy.first == NONE) {
+            Grid::initPolicy(al.first, al.second);
+        }
+    }
+}
+
+double Grid::getUtility(int i, int j) {
+    GridCell gc = grid[i][j];
+    return gc.reward + gc.policy.second;
 }
 
 double updateUtility(GridCell gridCell, GridCell nextGridCell, double discount) {
@@ -292,14 +362,16 @@ double updateUtility(GridCell gridCell, GridCell nextGridCell, double discount) 
 
 void Grid::moveAgent() {
     pair<int, int> agentLoc = Grid::getAgentLocation();
-    if(grid[agentLoc.first][agentLoc.second].policy.first == NONE) {
-        Grid::initPolicy(agentLoc.first, agentLoc.second);
-    }
+    // if(grid[agentLoc.first][agentLoc.second].policy.first == NONE) {
+    //     Grid::initPolicy(agentLoc.first, agentLoc.second);
+    // }
+
+    Grid::updatePolicy(agentLoc.first, agentLoc.second);
 
     while(true) {
         Direction dir = Grid::moveStochastically();
         pair<int, int> newAgentLoc = agentLoc;
-        
+
         switch(dir) {
             case NORTH:
                 newAgentLoc.first -= 1;
@@ -325,8 +397,10 @@ void Grid::moveAgent() {
             } else {
                 agentLocation = newAgentLoc;
             }
-
             break;
+        } else {
+            grid[agentLoc.first][agentLoc.second].policy.first =
+                Direction((grid[agentLoc.first][agentLoc.second].policy.first + 1) % 4);
         }
     }
 }
@@ -336,6 +410,7 @@ Direction Grid::moveStochastically() {
     Direction intendedDir = grid[agentLoc.first][agentLoc.second].policy.first;
     Direction resultDir = NONE;
     int r = rand() % 101;
+
     switch(intendedDir) {
         case NORTH:
             if(r < 10) {
