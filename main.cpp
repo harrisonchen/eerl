@@ -74,22 +74,22 @@ int main() {
 
   Grid grid(n, m);
   grid.setupGrid(n, m);
-  grid.initPolicy(n);
 
   pair<int, int> agentPos = pair<int, int>(grid.getStartLocation().first, grid.getStartLocation().second);
+  grid.initPolicy(agentPos.first, agentPos.second);
 
   clearScreen();
   grid.print(agentPos);
   shleep();
 
-  clearScreen();
-  moveAgent(grid[agentPos].policy.first, &agentPos, grid);
-  grid.print(agentPos);
-  shleep();
+  // clearScreen();
+  // moveAgent(grid[agentPos].policy.first, &agentPos, grid);
+  // grid.print(agentPos);
+  // shleep();
 
-  clearScreen();
-  moveAgent(grid[agentPos].policy.first, &agentPos, grid);
-  grid.print(agentPos);
+  // clearScreen();
+  // moveAgent(grid[agentPos].policy.first, &agentPos, grid);
+  // grid.print(agentPos);
 
   return 0;
 }

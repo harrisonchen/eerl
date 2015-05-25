@@ -111,8 +111,11 @@ public:
     // Constructors
     Grid(int n, int m);
 
+    void setupObstacles(int n, int m);
+    void setupRewards(int n, int m);
+    void setupPenalties(int n, int m);
     void setupGrid(int n, int m);
-    void initPolicy(int n);
+    void initPolicy(int i, int j);
     
     // Accessors to the 2D grid
     GridCell& operator[](const std::pair<int,int> & pos);

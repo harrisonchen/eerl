@@ -165,14 +165,8 @@ Grid::Grid(int n, int m)
      */
 }
 
-void Grid::setupGrid(int n, int m) {
-    srand(time(NULL));
-    int startFirst = rand() % n;
-    int startSecond = rand() % n;
-    startLocation = pair<int, int>(startFirst, startSecond);
-    grid[startFirst][startSecond].start = true;
-
-    // Generate obstacles
+// Generate obstacles
+void Grid::setupObstacles(int n, int m) {
     for(int i = 0; i < n; ++i) {
         int first;
         int second;
@@ -186,8 +180,10 @@ void Grid::setupGrid(int n, int m) {
 
         grid[first][second].type = GridCell::OBSTACLE;
     }
+}
 
-    // Generate rewards
+// Generate rewards
+void Grid::setupRewards(int n, int m) {
     for(int i = 0; i < m; ++i) {
         int first;
         int second;
@@ -202,8 +198,10 @@ void Grid::setupGrid(int n, int m) {
         grid[first][second].type = GridCell::TERMINAL;
         grid[first][second].reward = 10;
     }
+}
 
-    // Generate penalties
+// Generate penalties
+void Grid::setupPenalties(int n, int m) {
     for(int i = 0; i < m; ++i) {
         int first;
         int second;
@@ -220,58 +218,42 @@ void Grid::setupGrid(int n, int m) {
     }
 }
 
-Direction randomDirection(int r, GridCell *gridCell) {
+void Grid::setupGrid(int n, int m) {
+    srand(time(NULL));
+    int startFirst = rand() % n;
+    int startSecond = rand() % n;
+    startLocation = pair<int, int>(startFirst, startSecond);
+    grid[startFirst][startSecond].start = true;
+    
+    Grid::setupObstacles(n, m);
+    Grid::setupRewards(n, m);
+    Grid::setupPenalties(n, m);
+}
+
+Direction randomDirection(int r) {
     switch(r) {
         case 0:
-            gridCell->north = 0.7;
-            gridCell->east = 0.1;
-            gridCell->south = 0.1;
-            gridCell->west = 0.1;
             return NORTH;
             break;
         case 1:
-            gridCell->north = 0.1;
-            gridCell->east = 0.7;
-            gridCell->south = 0.1;
-            gridCell->west = 0.1;
             return EAST;
             break;
         case 2:
-            gridCell->north = 0.1;
-            gridCell->east = 0.1;
-            gridCell->south = 0.7;
-            gridCell->west = 0.1;
             return SOUTH;
             break;
         case 3:
-            gridCell->north = 0.1;
-            gridCell->east = 0.1;
-            gridCell->south = 0.1;
-            gridCell->west = 0.7;
             return WEST;
             break;
         default:
-            gridCell->north = 0.7;
-            gridCell->east = 0.1;
-            gridCell->south = 0.1;
-            gridCell->west = 0.1;
             return NORTH;
             break;
     }
 }
 
-void Grid::initPolicy(int n) {
-    srand(time(NULL));
-    int r;
-
-    for(int i = 0; i < n; ++i) {
-        for(int j = 0; j < n; ++j) {
-            if(grid[i][j].type == GridCell::BLANK) {
-                r = rand() % 4;
-                grid[i][j].policy = pair<Direction, double>(randomDirection(r, &grid[i][j]), 0.0);
-            }
-        }
-    }
+void Grid::initPolicy(int i, int j) {
+    // srand(time(NULL));
+    int r = rand() % 4;
+    grid[i][j].policy = pair<Direction, double>(randomDirection(r), 0.0);
 }
 
 double updateUtility(GridCell gridCell, GridCell nextGridCell, double discount) {
