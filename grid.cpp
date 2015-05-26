@@ -223,8 +223,9 @@ void Grid::setupPenalties(int n, int m) {
 }
 
 void Grid::setupGrid(int n, int m) {
-    // srand(time(NULL));
-    srand(1431537608);
+    srand(time(NULL));
+    // srand(1431537608);
+
     int startFirst = rand() % n;
     int startSecond = rand() % n;
     startLocation = pair<int, int>(startFirst, startSecond);
@@ -236,6 +237,7 @@ void Grid::setupGrid(int n, int m) {
     Grid::setupPenalties(n, m);
 }
 
+// Check if GridCell is within Grid bounds
 bool Grid::inBound(int i, int j) {
     if(i < 0 || i >= bounds.first || j < 0 || j >= bounds.first)
         return false;
@@ -243,6 +245,7 @@ bool Grid::inBound(int i, int j) {
     return true;
 }
 
+// Check if GridCell is of OBSTACLE type
 bool Grid::isObstacle(int i, int j) {
     if(grid[i][j].type == GridCell::OBSTACLE)
         return true;
@@ -250,10 +253,12 @@ bool Grid::isObstacle(int i, int j) {
     return false;
 }
 
+// Check if GridCell allows agent movement
 bool Grid::movable(int i, int j) {
     return Grid::inBound(i, j) && !Grid::isObstacle(i, j);
 }
 
+// Check if GridCell is of type TERMINAL
 bool Grid::isTerminal(int i, int j) {
     if(grid[i][j].type == GridCell::TERMINAL)
         return true;
@@ -261,6 +266,7 @@ bool Grid::isTerminal(int i, int j) {
     return false;
 }
 
+// Generate a random DIRECTION
 Direction randomDirection(int r) {
     switch(r) {
         case 0:
@@ -281,15 +287,21 @@ Direction randomDirection(int r) {
     }
 }
 
+// Initiate a policy for a GridCell
 void Grid::initPolicy(int i, int j) {
     int r = rand() % 4;
     grid[i][j].policy = pair<Direction, double>(randomDirection(r), 0.0);
 }
 
-// Returns maxargs? of utilities
+// Returns maxargs of utilities and updates policy along the way for optimal policy
 double Grid::updatePolicy(int i, int j) {
+    // Best policy direction utility
     double maxUtility = 0.0;
+
+    // Calculated policy rewards for next optimal movement
     double totalUtility = 0.0;
+
+    // Utitlity of neighboring GridCell
     double utility = 0.0;
     bool allZeros = true;
     pair<int, int> al = agentLocation;
@@ -365,6 +377,7 @@ double Grid::updatePolicy(int i, int j) {
     } else {
         gc->policy.first = newDir;
 
+        // Generate policy if NONE
         if(grid[al.first][al.second].policy.first == NONE) {
             Grid::initPolicy(al.first, al.second);
         }
@@ -373,37 +386,26 @@ double Grid::updatePolicy(int i, int j) {
     return totalUtility;
 }
 
+// Gets utitlity of GridCell
 double Grid::getUtility(int i, int j) {
     GridCell gc = grid[i][j];
     return gc.reward + gc.policy.second;
 }
 
-double Grid::updateUtility() {
-    // return gridCell.policy.second +
-    //        (1/(gridCell.visitCount + 1)) *
-    //        (gridCell.reward + discount * nextGridCell.policy.second) -
-    //        gridCell.policy.second;
-
-    // GridCell *gridCell = &grid[agentLocation.first][agentLocation.second];
-
-    // return gridCell->policy.second
-
-    return 0.0;
-}
-
+// Move agent across grid. This is the exploration feature of the program.
+// It adjusts the policy based on rewards and utility from exploring the grid.
 void Grid::moveAgent() {
     pair<int, int> agentLoc = Grid::getAgentLocation();
-    // if(grid[agentLoc.first][agentLoc.second].policy.first == NONE) {
-    //     Grid::initPolicy(agentLoc.first, agentLoc.second);
-    // }
 
     grid[agentLoc.first][agentLoc.second].policy.second = discount * Grid::updatePolicy(agentLoc.first, agentLoc.second);
-// cout << "Iteration: " << iteration << endl;
+
     while(true) {
         Direction dir = NONE;
         if(iteration % 5 != 0) {
+            // Random movement with high priority following policy.
             dir = Grid::moveStochastically();
         } else {
+            // allow agent to explore areas not following policy.
             dir = Grid::explore();
         }
         pair<int, int> newAgentLoc = agentLoc;
@@ -445,6 +447,9 @@ void Grid::moveAgent() {
     }
 }
 
+// Generates a Direction to move to based on current GridCell policy.
+// Probability of intended policy is 0.8 while other left and right of
+// direction is 0.1 each
 Direction Grid::moveStochastically() {
     pair<int, int> agentLoc = Grid::getAgentLocation();
     Direction intendedDir = grid[agentLoc.first][agentLoc.second].policy.first;
@@ -496,6 +501,9 @@ Direction Grid::moveStochastically() {
     return resultDir;
 }
 
+// Generates a Direction to move to based on current GridCell policy.
+// Probability of intended policy is equal to other directions to allow
+// exploration nature of program.
 Direction Grid::explore() {
     pair<int, int> agentLoc = Grid::getAgentLocation();
     Direction intendedDir = grid[agentLoc.first][agentLoc.second].policy.first;

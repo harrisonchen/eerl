@@ -1,0 +1,57 @@
+CS170 HW3 - AI Reinforcement Learning
+
+Harrison Chen
+hchen030
+
+I implemented the AI based on MDP. I seeded the random number generator using 
+time(NULL) so it is a different output everytime the program is ran. The AI 
+runs with a discount of 0.75 and updates the policy optimally everytime the 
+agent moves. The utility of each grid is based of reward of current grid and 
+also utility of current grid. It takes intended movements based on policy with
+a 80% change and the opposed left and right of the intended direction with 
+10% chance each. After a few iterations, the AI will go into exploratory mode 
+where the AI will run stochastically with equal chances of all directions so 
+it can run and explore into areas not explored yet that does not follow policy.
+
+Example RUN:
+
+hchen030@well $ ./a.out 4 1
+Initial ------------------------
+n: 4 m: 1
++------+------+------+------+
+| xxxx | 0.00 | 0.00 | 0.00 |
+| xxxx |      |      |      |
+| xxxx |  ?   |  ?   |  ?   |
++------+------+------+------+
+|-10.00| 0.00 | 0.00 | 0.00 |
+|      |  PS  |      |      |
+|  *   |  ?   |  ?   |  ?   |
++------+------+------+------+
+| 0.00 | xxxx | xxxx |+10.00|
+|      | xxxx | xxxx |      |
+|  ?   | xxxx | xxxx |  *   |
++------+------+------+------+
+| 0.00 | 0.00 | 0.00 | xxxx |
+|      |      |      | xxxx |
+|  ?   |  ?   |  ?   | xxxx |
++------+------+------+------+
+
+Final ------------------------
+Iterations: 100000
++------+------+------+------+
+| xxxx |-0.00 |-0.00 |+0.08 |
+| xxxx |      |      |      |
+| xxxx |  v   |  >   |  v   |
++------+------+------+------+
+|-10.00|+1.41 |+3.60 |+6.01 |
+|      |  PS  |      |      |
+|  *   |  >   |  >   |  v   |
++------+------+------+------+
+| 0.00 | xxxx | xxxx |+10.00|
+|      | xxxx | xxxx |      |
+|  ?   | xxxx | xxxx |  *   |
++------+------+------+------+
+| 0.00 | 0.00 | 0.00 | xxxx |
+|      |      |      | xxxx |
+|  ?   |  ?   |  ?   | xxxx |
++------+------+------+------+

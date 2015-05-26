@@ -40,7 +40,7 @@ int main(int argc, char *argv[]) {
 
   cout << "Initial ------------------------" << endl;
   cout << "n: " << n << " m: " << m << endl;
-  cout << "seed: " << "1431537608" << endl;
+  // cout << "seed: " << "1431537608" << endl;
 
   grid.print(grid.getAgentLocation());  
 
@@ -51,15 +51,6 @@ int main(int argc, char *argv[]) {
   cout << "Iterations: " << grid.iteration << endl;
 
   grid.print(grid.getAgentLocation());
-
-  // clearScreen();
-  // moveAgent(grid[agentPos].policy.first, &agentPos, grid);
-  // grid.print(agentPos);
-  // shleep();
-
-  // clearScreen();
-  // moveAgent(grid[agentPos].policy.first, &agentPos, grid);
-  // grid.print(agentPos);
 
   return 0;
 }
