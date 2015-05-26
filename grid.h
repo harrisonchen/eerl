@@ -109,7 +109,13 @@ private:
     std::pair<int,int> startLocation;
 
     std::pair<int,int> agentLocation;
+
+    Direction prevDir;
+    double discount;
+    bool randomExploration;
 public:
+    int iteration;
+    
     // Constructors
     Grid(int n, int m);
 
@@ -135,6 +141,7 @@ public:
     bool movable(int i, int j);
     bool isTerminal(int i, int j);
     Direction moveStochastically();
+    Direction explore();
     double getUtility(int i, int j);
 
     void moveAgent();

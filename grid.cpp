@@ -159,6 +159,10 @@ Grid::Grid(int n, int m)
     grid = vector<vector<GridCell> >(bounds.first, vector<GridCell>(bounds.second));
     Grid::setupGrid(n, m);
 
+    discount = 0.75;
+    iteration = 1;
+    prevDir = NONE;
+
     /* Currently ignores the m parameter in terms of rewards and penalty placement.
         Also ignores n obstacle placement and assigns startLocation to invalid
         location on the grid.
@@ -219,7 +223,8 @@ void Grid::setupPenalties(int n, int m) {
 }
 
 void Grid::setupGrid(int n, int m) {
-    srand(time(NULL));
+    // srand(time(NULL));
+    srand(1431537608);
     int startFirst = rand() % n;
     int startSecond = rand() % n;
     startLocation = pair<int, int>(startFirst, startSecond);
@@ -295,7 +300,7 @@ double Grid::updatePolicy(int i, int j) {
     Direction newDir = dir;
 
     // Check NORTH
-    if(Grid::movable(al.first - 1, al.second) && dir != SOUTH) {
+    if(Grid::movable(al.first - 1, al.second) && prevDir != SOUTH) {
         utility = Grid::getUtility(al.first - 1, al.second);
         if(dir == NORTH)
             totalUtility += utility * 0.8;
@@ -304,13 +309,13 @@ double Grid::updatePolicy(int i, int j) {
 
         if(utility > maxUtility) {
             maxUtility = utility;
-            newDir = EAST;
+            newDir = NORTH;
             allZeros = false;
         }
     }
 
     // Check EAST
-    if(Grid::movable(al.first, al.second + 1) && dir != WEST) {
+    if(Grid::movable(al.first, al.second + 1) && prevDir != WEST) {
         utility = Grid::getUtility(al.first, al.second + 1);
         if(dir == EAST)
             totalUtility += utility * 0.8;
@@ -325,7 +330,7 @@ double Grid::updatePolicy(int i, int j) {
     }
 
     // Check SOUTH
-    if(Grid::movable(al.first + 1, al.second) && dir != NORTH) {
+    if(Grid::movable(al.first + 1, al.second) && prevDir != NORTH) {
         utility = Grid::getUtility(al.first + 1, al.second);
         if(dir == SOUTH)
             totalUtility += utility * 0.8;
@@ -340,7 +345,7 @@ double Grid::updatePolicy(int i, int j) {
     }
 
     // Check WEST
-    if(Grid::movable(al.first, al.second - 1) && dir != EAST) {
+    if(Grid::movable(al.first, al.second - 1) && prevDir != EAST) {
         utility = Grid::getUtility(al.first, al.second - 1);
         if(dir == WEST)
             totalUtility += utility * 0.8;
@@ -392,10 +397,15 @@ void Grid::moveAgent() {
     //     Grid::initPolicy(agentLoc.first, agentLoc.second);
     // }
 
-    grid[agentLoc.first][agentLoc.second].policy.second = Grid::updatePolicy(agentLoc.first, agentLoc.second);
-
+    grid[agentLoc.first][agentLoc.second].policy.second = discount * Grid::updatePolicy(agentLoc.first, agentLoc.second);
+// cout << "Iteration: " << iteration << endl;
     while(true) {
-        Direction dir = Grid::moveStochastically();
+        Direction dir = NONE;
+        if(iteration % 5 != 0) {
+            dir = Grid::moveStochastically();
+        } else {
+            dir = Grid::explore();
+        }
         pair<int, int> newAgentLoc = agentLoc;
 
         switch(dir) {
@@ -419,10 +429,14 @@ void Grid::moveAgent() {
             !Grid::isObstacle(newAgentLoc.first, newAgentLoc.second)) {
 
             if(Grid::isTerminal(newAgentLoc.first, newAgentLoc.second)) {
+                iteration += 1;
                 agentLocation = Grid::getStartLocation();
             } else {
                 agentLocation = newAgentLoc;
             }
+    // cout << "Direction: " << toString(dir) << endl;
+
+            prevDir = dir;
             break;
         } else {
             grid[agentLoc.first][agentLoc.second].policy.first =
@@ -475,7 +489,58 @@ Direction Grid::moveStochastically() {
             }
             break;
         default:
-            resultDir = NONE;
+            resultDir = NORTH;
+            break;
+    }
+
+    return resultDir;
+}
+
+Direction Grid::explore() {
+    pair<int, int> agentLoc = Grid::getAgentLocation();
+    Direction intendedDir = grid[agentLoc.first][agentLoc.second].policy.first;
+    Direction resultDir = NONE;
+    int r = rand() % 101;
+
+    switch(intendedDir) {
+        case NORTH:
+            if(r < 33) {
+                resultDir = WEST;
+            } else if(r < 66) {
+                resultDir = EAST;
+            } else {
+                resultDir = NORTH;
+            }
+            break;
+        case EAST:
+            if(r < 33) {
+                resultDir = NORTH;
+            } else if(r < 66) {
+                resultDir = SOUTH;
+            } else {
+                resultDir = EAST;
+            }
+            break;
+        case SOUTH:
+            if(r < 33) {
+                resultDir = EAST;
+            } else if(r < 66) {
+                resultDir = WEST;
+            } else {
+                resultDir = SOUTH;
+            }
+            break;
+        case WEST:
+            if(r < 33) {
+                resultDir = SOUTH;
+            } else if(r < 66) {
+                resultDir = NORTH;
+            } else {
+                resultDir = WEST;
+            }
+            break;
+        default:
+            resultDir = NORTH;
             break;
     }
 
